@@ -1,0 +1,38 @@
+Telegram бот “монитор цен”
+🧱 ШАГ 1 — установка среды (Termux/Ubuntu)
+Bash
+pkg update && pkg install python git
+pip install python-telegram-bot requests beautifulsoup4
+🤖 ШАГ 2 — базовый бот
+Python
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+
+TOKEN = "ТВОЙ_ТОКЕН"
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Я бот мониторинга цен 👀")
+
+app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(CommandHandler("start", start))
+
+app.run_polling()
+🔍 ШАГ 3 — простой монитор
+Python
+import requests
+from bs4 import BeautifulSoup
+
+def get_price(url):
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text, "html.parser")
+
+    price = soup.select_one(".price")  # пример селектора
+    return price.text if price else "нет цены"
+🔔 ШАГ 4 — уведомления
+Python
+async def check_price(context):
+    price = get_price("https://example.com")
+    await context.bot.send_message(chat_id=YOUR_CHAT_ID, text=f"Цена: {price}")
+⏱ ШАГ 5 — запуск по таймеру
+Python
+job_queue.run_repeating(check_price, interval=3600, first=10)
